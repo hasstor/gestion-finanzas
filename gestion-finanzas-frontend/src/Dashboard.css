@@ -1,0 +1,38 @@
+body {
+    font-family: 'Rubik', sans-serif; /* Aplica la fuente Rubik a todo el cuerpo */
+  }
+
+.dashboard-container {
+    display: flex;
+    justify-content: space-between;
+    background: linear-gradient(to right, #0e2042, #2a69ac);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .profile-section {
+    flex: 1;
+    background-color: rgb(13, 13, 13);
+    padding: 15px; /* Reduce el padding */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    max-width: 200px; /* Añadir un ancho máximo para compactar */
+    color: #a59c9c; /* Cambiar el color del texto */
+    font-size: 14px; /* Reducir el tamaño de la fuente */
+  }
+  
+  .profile-section h2,
+  .profile-section h4 {
+    font-size: 16px; /* Tamaño de fuente para encabezados */
+  }
+  
+  .profile-section p {
+    font-size: 12px; /* Tamaño de fuente para párrafos */
+  }
+  
+  
+  .transactions-section {
+    flex: 2;
+    background-color: white;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  

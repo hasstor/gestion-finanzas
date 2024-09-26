@@ -4,6 +4,7 @@ import Login from './Login';
 import Register from './Register';
 import Dashboard from './Dashboard';
 import PrivateRoute from './PrivateRoute';  // Importar el componente de rutas privadas
+import EditarPerfil from './EditarPerfil';  // Importamos el nuevo componente
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem('token'));
@@ -34,6 +35,16 @@ function App() {
             element={
               <PrivateRoute token={token}>
                 <Dashboard token={token} logout={logout} />
+              </PrivateRoute>
+            }
+          />
+
+          {/* Ruta para editar perfil */}
+          <Route
+            path="/editar-perfil"
+            element={
+              <PrivateRoute token={token}>
+                <EditarPerfil token={token} />
               </PrivateRoute>
             }
           />
