@@ -1,38 +1,99 @@
-body {
-    font-family: 'Rubik', sans-serif; /* Aplica la fuente Rubik a todo el cuerpo */
-  }
+html, body {
+  height: 100%;
+  margin: 0;
+}
 
 .dashboard-container {
-    display: flex;
-    justify-content: space-between;
-    background: linear-gradient(to right, #0e2042, #2a69ac);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  }
-  
-  .profile-section {
-    flex: 1;
-    background-color: rgb(13, 13, 13);
-    padding: 15px; /* Reduce el padding */
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    max-width: 200px; /* Añadir un ancho máximo para compactar */
-    color: #a59c9c; /* Cambiar el color del texto */
-    font-size: 14px; /* Reducir el tamaño de la fuente */
-  }
-  
-  .profile-section h2,
-  .profile-section h4 {
-    font-size: 16px; /* Tamaño de fuente para encabezados */
-  }
-  
-  .profile-section p {
-    font-size: 12px; /* Tamaño de fuente para párrafos */
-  }
-  
-  
-  .transactions-section {
-    flex: 2;
-    background-color: white;
-    padding: 20px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  }
-  
+  display: flex;
+  height: 100vh;  /* Ocupar toda la pantalla */
+  background-color: rgb(13, 13, 13);
+  position: relative;  /* Permitir la superposición de secciones */
+}
+
+.hamburger-btn {
+  position: fixed;  /* Fijo en la pantalla */
+  top: 15px;
+  left: 15px;
+  z-index: 10;  /* Asegurarse de que esté por encima del menú */
+  background-color: transparent;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #a59c9c;
+}
+
+.profile-section {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 250px;  /* Ancho del perfil */
+  background-color: rgb(13, 13, 13);
+  color: #a59c9c;
+  padding: 15px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+  z-index: 5;  /* Estar debajo del contenido cuando está abierto */
+}
+
+.profile-section.collapsed {
+  transform: translateX(-250px);  /* Colapsa a la izquierda */
+}
+
+.profile-image {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 3px solid #007bff;
+  padding: 5px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.profile-image:hover {
+  transform: scale(1.05);  /* Recuperamos la animación al hacer hover */
+}
+
+.transactions-section {
+  flex: 1;
+  padding: 20px;
+  margin-left: 0;
+  transition: margin-left 0.3s ease;
+  z-index: 1;  /* El contenido se pone sobre el perfil cuando está abierto */
+}
+
+.transactions-section.overlay {
+  margin-left: 250px;  /* No mueve las transacciones pero las ajusta sobre el menú */
+}
+
+.btn-edit, .btn-logout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  padding: 10px;
+  margin-top: 10px;
+  color: white;
+  border-radius: 8px;
+  transition: background-color 0.3s ease;
+}
+
+.btn-edit {
+  background-color: #ffc107;
+}
+
+.btn-edit:hover {
+  background-color: #e0a800;
+}
+
+.btn-logout {
+  background-color: #dc3545;
+}
+
+.btn-logout:hover {
+  background-color: #c82333;
+}
+
+.icon {
+  margin-right: 10px;
+}

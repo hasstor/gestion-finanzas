@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Link } from 'react-router-dom';
-import './Dashboard.css'; // Asegúrate de crear este archivo CSS
+import { FaEdit, FaSignOutAlt, FaBars } from 'react-icons/fa';
+import './Dashboard.css';
 
 function Dashboard({ token, logout }) {
   const [transacciones, setTransacciones] = useState([]);
   const [usuario, setUsuario] = useState(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(true);  // Menú visible por defecto
   const [cantidad, setCantidad] = useState('');
   const [categoria, setCategoria] = useState('');
   const [tipo, setTipo] = useState('ingreso');
@@ -95,21 +97,39 @@ function Dashboard({ token, logout }) {
 
   return (
     <div className="dashboard-container">
-      <div className="profile-section">
+      <button
+        className="hamburger-btn"
+        onClick={() => setIsMenuOpen(!isMenuOpen)}  // Controlar la apertura/cierre del menú
+        aria-expanded={isMenuOpen}
+        aria-controls="profile-section"
+      >
+        <FaBars />
+      </button>
+
+      <div id="profile-section" className={`profile-section ${isMenuOpen ? '' : 'collapsed'}`}>
         <h2 className="text-center">Perfil</h2>
         {error && <div className="alert alert-danger">{error}</div>}
         {success && <div className="alert alert-success">{success}</div>}
         {usuario && (
           <div className="text-center mb-4">
-            <img src={`http://localhost:3000${usuario.foto_perfil}`} alt="Foto de perfil" className="rounded-circle mb-2" width="100" height="100" />
+            <img
+              src={`http://localhost:3000${usuario.foto_perfil}`}
+              alt="Foto de perfil"
+              className="profile-image mb-2"
+            />
             <h4>{usuario.nombre}</h4>
             <p>{usuario.email}</p>
-            <Link to="/editar-perfil" className="btn btn-warning w-100 mt-2">Editar perfil</Link>
+            <Link to="/editar-perfil" className="btn btn-edit w-100 mt-2">
+              <FaEdit className="icon" /> Editar perfil
+            </Link>
+            <button onClick={logout} className="btn btn-logout w-100 mt-2">
+              <FaSignOutAlt className="icon" /> Cerrar Sesión
+            </button>
           </div>
         )}
-        <button onClick={logout} className="btn btn-danger w-100 mt-2">Cerrar Sesión</button>
       </div>
-      <div className="transactions-section">
+
+      <div className={`transactions-section ${isMenuOpen ? 'overlay' : ''}`}>
         <h2 className="text-center">Transacciones</h2>
         {transacciones.length > 0 ? (
           <ul className="list-group mb-4">
@@ -138,19 +158,42 @@ function Dashboard({ token, logout }) {
           </div>
           <div className="mb-3">
             <label>Cantidad:</label>
-            <input type="number" className="form-control" value={cantidad} onChange={(e) => setCantidad(e.target.value)} required />
+            <input
+              type="number"
+              className="form-control"
+              value={cantidad}
+              onChange={(e) => setCantidad(e.target.value)}
+              required
+            />
           </div>
           <div className="mb-3">
             <label>Fecha:</label>
-            <input type="date" className="form-control" value={fecha} onChange={(e) => setFecha(e.target.value)} required />
+            <input
+              type="date"
+              className="form-control"
+              value={fecha}
+              onChange={(e) => setFecha(e.target.value)}
+              required
+            />
           </div>
           <div className="mb-3">
             <label>Categoría:</label>
-            <input type="text" className="form-control" value={categoria} onChange={(e) => setCategoria(e.target.value)} required />
+            <input
+              type="text"
+              className="form-control"
+              value={categoria}
+              onChange={(e) => setCategoria(e.target.value)}
+              required
+            />
           </div>
           <div className="mb-3">
             <label>Descripción:</label>
-            <input type="text" className="form-control" value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />
+            <input
+              type="text"
+              className="form-control"
+              value={descripcion}
+              onChange={(e) => setDescripcion(e.target.value)}
+            />
           </div>
           <button type="submit" className="btn btn-success w-100">Agregar</button>
         </form>
