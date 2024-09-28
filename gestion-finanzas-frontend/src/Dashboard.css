@@ -1,43 +1,62 @@
-html, body {
-  height: 100%;
-  margin: 0;
-}
-
 .dashboard-container {
   display: flex;
-  height: 100vh;  /* Ocupar toda la pantalla */
+  height: 100vh;
+}
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 60px;
   background-color: rgb(13, 13, 13);
-  position: relative;  /* Permitir la superposición de secciones */
+  color: #a59c9c;
+  padding-top: 10px;
+  transition: width 0.3s ease;
+  z-index: 5;
+}
+
+.sidebar.open {
+  width: 250px;
 }
 
 .hamburger-btn {
-  position: fixed;  /* Fijo en la pantalla */
-  top: 15px;
-  left: 15px;
-  z-index: 10;  /* Asegurarse de que esté por encima del menú */
   background-color: transparent;
   border: none;
   font-size: 24px;
   cursor: pointer;
   color: #a59c9c;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 10px;
 }
 
-.profile-section {
-  position: fixed;
-  top: 0;
-  left: 0;
-  height: 100vh;
-  width: 250px;  /* Ancho del perfil */
-  background-color: rgb(13, 13, 13);
+.nav-link {
   color: #a59c9c;
-  padding: 15px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease;
-  z-index: 5;  /* Estar debajo del contenido cuando está abierto */
+  padding: 10px;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
 }
 
-.profile-section.collapsed {
-  transform: translateX(-250px);  /* Colapsa a la izquierda */
+.nav-link:hover {
+  background-color: #333;
+  color: #fff;
+}
+
+.sidebar-user-info {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  padding: 20px 10px;
+  text-align: center;
+  transition: opacity 0.3s ease;
+  opacity: 0;
+}
+
+.sidebar.open .sidebar-user-info {
+  opacity: 1;
 }
 
 .profile-image {
@@ -54,46 +73,13 @@ html, body {
   transform: scale(1.05);  /* Recuperamos la animación al hacer hover */
 }
 
-.transactions-section {
+.content-section {
   flex: 1;
   padding: 20px;
-  margin-left: 0;
+  margin-left: 60px;
   transition: margin-left 0.3s ease;
-  z-index: 1;  /* El contenido se pone sobre el perfil cuando está abierto */
 }
 
-.transactions-section.overlay {
-  margin-left: 250px;  /* No mueve las transacciones pero las ajusta sobre el menú */
-}
-
-.btn-edit, .btn-logout {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  padding: 10px;
-  margin-top: 10px;
-  color: white;
-  border-radius: 8px;
-  transition: background-color 0.3s ease;
-}
-
-.btn-edit {
-  background-color: #ffc107;
-}
-
-.btn-edit:hover {
-  background-color: #e0a800;
-}
-
-.btn-logout {
-  background-color: #dc3545;
-}
-
-.btn-logout:hover {
-  background-color: #c82333;
-}
-
-.icon {
-  margin-right: 10px;
+.content-section.overlay {
+  margin-left: 250px;
 }

@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { Link } from 'react-router-dom';
-import { FaEdit, FaSignOutAlt, FaBars } from 'react-icons/fa';
+import { Link, Route, Routes } from 'react-router-dom';
+import { FaBars, FaSignOutAlt, FaUser, FaClipboardList } from 'react-icons/fa';
 import './Dashboard.css';
+import Profile from './Profile'; // Nueva página de perfil
+import EditProfile from './EditProfile'; // Nueva página de edición de perfil
 
 function Dashboard({ token, logout }) {
   const [transacciones, setTransacciones] = useState([]);
   const [usuario, setUsuario] = useState(null);
-  const [isMenuOpen, setIsMenuOpen] = useState(true);  // Menú visible por defecto
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [cantidad, setCantidad] = useState('');
   const [categoria, setCategoria] = useState('');
   const [tipo, setTipo] = useState('ingreso');
@@ -16,6 +18,7 @@ function Dashboard({ token, logout }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  // Funciones de Fetch para obtener transacciones y usuario
   const fetchTransacciones = useCallback(async () => {
     try {
       const response = await fetch('http://localhost:3000/transacciones', {
@@ -97,106 +100,132 @@ function Dashboard({ token, logout }) {
 
   return (
     <div className="dashboard-container">
-      <button
-        className="hamburger-btn"
-        onClick={() => setIsMenuOpen(!isMenuOpen)}  // Controlar la apertura/cierre del menú
-        aria-expanded={isMenuOpen}
-        aria-controls="profile-section"
-      >
-        <FaBars />
-      </button>
+      {/* Barra lateral del menú */}
+      <div id="sidebar" className={`sidebar ${isMenuOpen ? 'open' : ''}`}>
+        {/* Botón hamburguesa en el menú */}
+        <button
+          className="hamburger-btn nav-link"
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          aria-expanded={isMenuOpen}
+          aria-controls="sidebar"
+        >
+          <FaBars />
+        </button>
 
-      <div id="profile-section" className={`profile-section ${isMenuOpen ? '' : 'collapsed'}`}>
-        <h2 className="text-center">Perfil</h2>
-        {error && <div className="alert alert-danger">{error}</div>}
-        {success && <div className="alert alert-success">{success}</div>}
-        {usuario && (
-          <div className="text-center mb-4">
+        {/* Enlaces de navegación en la barra lateral */}
+        <nav className="nav flex-column mt-3">
+          <Link to="/perfil" className="nav-link">
+            <FaUser /> {isMenuOpen && "Perfil"}
+          </Link>
+          <Link to="/transacciones" className="nav-link">
+            <FaClipboardList /> {isMenuOpen && "Transacciones"}
+          </Link>
+        </nav>
+
+        {/* Mostrar información del usuario en la parte inferior solo si está expandido */}
+        {isMenuOpen && usuario && (
+          <div className="sidebar-user-info">
             <img
               src={`http://localhost:3000${usuario.foto_perfil}`}
               alt="Foto de perfil"
               className="profile-image mb-2"
             />
-            <h4>{usuario.nombre}</h4>
-            <p>{usuario.email}</p>
-            <Link to="/editar-perfil" className="btn btn-edit w-100 mt-2">
-              <FaEdit className="icon" /> Editar perfil
-            </Link>
-            <button onClick={logout} className="btn btn-logout w-100 mt-2">
-              <FaSignOutAlt className="icon" /> Cerrar Sesión
-            </button>
+            <p>{usuario.nombre}</p>
           </div>
         )}
       </div>
 
-      <div className={`transactions-section ${isMenuOpen ? 'overlay' : ''}`}>
-        <h2 className="text-center">Transacciones</h2>
-        {transacciones.length > 0 ? (
-          <ul className="list-group mb-4">
-            {transacciones.map((transaccion) => (
-              <li key={transaccion.id} className="list-group-item d-flex justify-content-between align-items-center">
-                <div>
-                  <strong>{transaccion.fecha}</strong> - {transaccion.categoria} ({transaccion.tipo})
-                </div>
-                <span className={`badge ${transaccion.tipo === 'ingreso' ? 'bg-success' : 'bg-danger'} rounded-pill`}>
-                  ${transaccion.cantidad}
-                </span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-center">No hay transacciones disponibles</p>
-        )}
-        <h3 className="text-center">Agregar nueva transacción</h3>
-        <form onSubmit={handleSubmit} className="col-md-6 mx-auto">
-          <div className="mb-3">
-            <label>Tipo:</label>
-            <select className="form-select" value={tipo} onChange={(e) => setTipo(e.target.value)}>
-              <option value="ingreso">Ingreso</option>
-              <option value="gasto">Gasto</option>
-            </select>
-          </div>
-          <div className="mb-3">
-            <label>Cantidad:</label>
-            <input
-              type="number"
-              className="form-control"
-              value={cantidad}
-              onChange={(e) => setCantidad(e.target.value)}
-              required
-            />
-          </div>
-          <div className="mb-3">
-            <label>Fecha:</label>
-            <input
-              type="date"
-              className="form-control"
-              value={fecha}
-              onChange={(e) => setFecha(e.target.value)}
-              required
-            />
-          </div>
-          <div className="mb-3">
-            <label>Categoría:</label>
-            <input
-              type="text"
-              className="form-control"
-              value={categoria}
-              onChange={(e) => setCategoria(e.target.value)}
-              required
-            />
-          </div>
-          <div className="mb-3">
-            <label>Descripción:</label>
-            <input
-              type="text"
-              className="form-control"
-              value={descripcion}
-              onChange={(e) => setDescripcion(e.target.value)}
-            />
-          </div>
-          <button type="submit" className="btn btn-success w-100">Agregar</button>
-        </form>
+      {/* Sección de contenido que cambia según la ruta */}
+      <div className={`content-section ${isMenuOpen ? 'overlay' : ''}`}>
+        <Routes>
+          {/* Página de Perfil */}
+          <Route
+            path="/perfil"
+            element={<Profile usuario={usuario} />}
+          />
+          
+          {/* Página de Edición de Perfil */}
+          <Route
+            path="/editar-perfil"
+            element={<EditProfile usuario={usuario} />}
+          />
+          
+          {/* Página de Transacciones */}
+          <Route
+            path="/transacciones"
+            element={
+              <>
+                <h2 className="text-center">Transacciones</h2>
+                {transacciones.length > 0 ? (
+                  <ul className="list-group mb-4">
+                    {transacciones.map((transaccion) => (
+                      <li key={transaccion.id} className="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                          <strong>{transaccion.fecha}</strong> - {transaccion.categoria} ({transaccion.tipo})
+                        </div>
+                        <span className={`badge ${transaccion.tipo === 'ingreso' ? 'bg-success' : 'bg-danger'} rounded-pill`}>
+                          ${transaccion.cantidad}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-center">No hay transacciones disponibles</p>
+                )}
+                <h3 className="text-center">Agregar nueva transacción</h3>
+                <form onSubmit={handleSubmit} className="col-md-6 mx-auto">
+                  <div className="mb-3">
+                    <label>Tipo:</label>
+                    <select className="form-select" value={tipo} onChange={(e) => setTipo(e.target.value)}>
+                      <option value="ingreso">Ingreso</option>
+                      <option value="gasto">Gasto</option>
+                    </select>
+                  </div>
+                  <div className="mb-3">
+                    <label>Cantidad:</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      value={cantidad}
+                      onChange={(e) => setCantidad(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label>Fecha:</label>
+                    <input
+                      type="date"
+                      className="form-control"
+                      value={fecha}
+                      onChange={(e) => setFecha(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label>Categoría:</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={categoria}
+                      onChange={(e) => setCategoria(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label>Descripción:</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={descripcion}
+                      onChange={(e) => setDescripcion(e.target.value)}
+                    />
+                  </div>
+                  <button type="submit" className="btn btn-success w-100">Agregar</button>
+                </form>
+              </>
+            }
+          />
+        </Routes>
       </div>
     </div>
   );
