@@ -210,6 +210,33 @@ app.put('/usuarios/editar-perfil', authenticateToken, upload.single('foto_perfil
   });
 });
 
+// Ruta para agregar una inversión
+app.post('/inversiones', authenticateToken, (req, res) => {
+  const { tipo, cantidad, descripcion, fecha } = req.body;
+  const userId = req.user.id;
+
+  const sql = 'INSERT INTO inversiones (user_id, tipo, cantidad, descripcion, fecha) VALUES (?, ?, ?, ?, ?)';
+  db.query(sql, [userId, tipo, cantidad, descripcion, fecha], (err, result) => {
+    if (err) {
+      return res.status(500).json({ message: 'Error al agregar la inversión' });
+    }
+    res.json({ message: 'Inversión agregada exitosamente', id: result.insertId });
+  });
+});
+
+// Ruta para obtener las inversiones de un usuario
+app.get('/inversiones', authenticateToken, (req, res) => {
+  const userId = req.user.id;
+
+  const sql = 'SELECT * FROM inversiones WHERE user_id = ? ORDER BY fecha DESC';
+  db.query(sql, [userId], (err, result) => {
+    if (err) {
+      return res.status(500).json({ message: 'Error al cargar las inversiones' });
+    }
+    res.json(result);
+  });
+});
+
 // Iniciar el servidor
 app.listen(port, () => {
   console.log(`Servidor escuchando en http://localhost:${port}`);

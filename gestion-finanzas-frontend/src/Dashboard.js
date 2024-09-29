@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Link, Route, Routes } from 'react-router-dom';
-import { FaBars, FaSignOutAlt, FaUser, FaClipboardList } from 'react-icons/fa';
+import { FaBars, /*FaSignOutAlt,*/ FaUser, FaClipboardList, FaChartLine} from 'react-icons/fa'; // Añadido FaChartLine para inversiones
 import './Dashboard.css';
 import Profile from './Profile'; // Nueva página de perfil
 import EditProfile from './EditProfile'; // Nueva página de edición de perfil
 
-function Dashboard({ token, logout }) {
+function Dashboard({ token }) {
   const [transacciones, setTransacciones] = useState([]);
+  const [inversiones, setInversiones] = useState([]);
   const [usuario, setUsuario] = useState(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [cantidad, setCantidad] = useState('');
@@ -15,10 +16,10 @@ function Dashboard({ token, logout }) {
   const [tipo, setTipo] = useState('ingreso');
   const [descripcion, setDescripcion] = useState('');
   const [fecha, setFecha] = useState('');
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  //const [error, setError] = useState('');
+  //const [success, setSuccess] = useState('');
 
-  // Funciones de Fetch para obtener transacciones y usuario
+  // Fetch de transacciones
   const fetchTransacciones = useCallback(async () => {
     try {
       const response = await fetch('http://localhost:3000/transacciones', {
@@ -39,6 +40,28 @@ function Dashboard({ token, logout }) {
     }
   }, [token]);
 
+  // Fetch de inversiones
+  const fetchInversiones = useCallback(async () => {
+    try {
+      const response = await fetch('http://localhost:3000/inversiones', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al obtener las inversiones');
+      }
+
+      const data = await response.json();
+      setInversiones(Array.isArray(data) ? data : []);
+    } catch (error) {
+      setError('Error al cargar las inversiones');
+    }
+  }, [token]);
+
+  // Fetch del usuario
   const fetchUsuario = useCallback(async () => {
     try {
       const response = await fetch('http://localhost:3000/mi-perfil', {
@@ -63,9 +86,11 @@ function Dashboard({ token, logout }) {
     if (token) {
       fetchTransacciones();
       fetchUsuario();
+      fetchInversiones(); // Fetch de las inversiones
     }
-  }, [token, fetchTransacciones, fetchUsuario]);
+  }, [token, fetchTransacciones, fetchUsuario, fetchInversiones]);
 
+  // Manejo de agregar transacción
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -120,6 +145,9 @@ function Dashboard({ token, logout }) {
           <Link to="/transacciones" className="nav-link">
             <FaClipboardList /> {isMenuOpen && "Transacciones"}
           </Link>
+          <Link to="/inversiones" className="nav-link">
+            <FaChartLine /> {isMenuOpen && "Inversiones"}
+          </Link>
         </nav>
 
         {/* Mostrar información del usuario en la parte inferior solo si está expandido */}
@@ -143,13 +171,13 @@ function Dashboard({ token, logout }) {
             path="/perfil"
             element={<Profile usuario={usuario} />}
           />
-          
+
           {/* Página de Edición de Perfil */}
           <Route
             path="/editar-perfil"
             element={<EditProfile usuario={usuario} />}
           />
-          
+
           {/* Página de Transacciones */}
           <Route
             path="/transacciones"
@@ -222,6 +250,29 @@ function Dashboard({ token, logout }) {
                   </div>
                   <button type="submit" className="btn btn-success w-100">Agregar</button>
                 </form>
+              </>
+            }
+          />
+
+          {/* Página de Inversiones */}
+          <Route
+            path="/inversiones"
+            element={
+              <>
+                <h2 className="text-center">Inversiones</h2>
+                {inversiones.length > 0 ? (
+                  <ul className="list-group mb-4">
+                    {inversiones.map((inversion) => (
+                      <li key={inversion.id} className="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                          <strong>{inversion.fecha}</strong> - {inversion.tipo} (${inversion.cantidad})
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-center">No hay inversiones disponibles</p>
+                )}
               </>
             }
           />
