@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Link, Route, Routes } from 'react-router-dom';
-import { FaBars, /*FaSignOutAlt,*/ FaUser, FaClipboardList, FaChartLine} from 'react-icons/fa'; // Añadido FaChartLine para inversiones
+import { FaBars, FaUser, FaClipboardList, FaChartLine} from 'react-icons/fa'; // Añadido FaChartLine para inversiones
 import './Dashboard.css';
-import Profile from './Profile'; // Nueva página de perfil
-import EditProfile from './EditProfile'; // Nueva página de edición de perfil
+import Profile from './Profile'; 
+import EditProfile from './EditProfile'; 
+import Inversiones from './Inversiones';
 
 function Dashboard({ token }) {
   const [transacciones, setTransacciones] = useState([]);
@@ -16,8 +17,8 @@ function Dashboard({ token }) {
   const [tipo, setTipo] = useState('ingreso');
   const [descripcion, setDescripcion] = useState('');
   const [fecha, setFecha] = useState('');
-  //const [error, setError] = useState('');
-  //const [success, setSuccess] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   // Fetch de transacciones
   const fetchTransacciones = useCallback(async () => {
