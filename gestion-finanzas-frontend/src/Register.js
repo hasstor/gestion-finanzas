@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { useNavigate, Link } from 'react-router-dom';
 
 function Register() {
   const [nombre, setNombre] = useState('');
@@ -8,6 +9,7 @@ function Register() {
   const [fotoPerfil, setFotoPerfil] = useState(null); // Nuevo estado para la imagen
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const navigate = useNavigate();  // Usar useNavigate para la navegación
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -86,6 +88,10 @@ function Register() {
           </div>
           <button type="submit" className="btn btn-primary w-100">Registrarse</button>
         </form>
+
+        <p className="text-center mt-3">
+          ¿Ya tienes una cuenta? <Link to="/">Inicia sesión aquí</Link>
+        </p>
       </div>
     </div>
   );

@@ -1,47 +1,16 @@
-// Inversiones.js
-import React, { useState, useEffect } from 'react';
+// src/Inversiones.js
+import React, { useState } from 'react';
 
-function Inversiones({ token }) {
-  const [inversiones, setInversiones] = useState([]);
-  const [tipoInversion, setTipoInversion] = useState('');
-  const [monto, setMonto] = useState('');
+function Inversiones({ inversiones, token }) {
+  const [tipo, setTipo] = useState('');
+  const [cantidad, setCantidad] = useState('');
   const [fecha, setFecha] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // Función para obtener las inversiones del usuario
-  const fetchInversiones = async () => {
-    try {
-      const response = await fetch('http://localhost:3000/inversiones', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al obtener las inversiones');
-      }
-
-      const data = await response.json();
-      setInversiones(Array.isArray(data) ? data : []);
-    } catch (error) {
-      setError('Error al cargar las inversiones');
-    }
-  };
-
-  // Llamar a la función de fetch al cargar el componente
-  useEffect(() => {
-    if (token) {
-      fetchInversiones();
-    }
-  }, [token]);
-
-  // Función para manejar el envío del formulario
-  const handleSubmit = async (e) => {
+  const handleSubmitInversion = async (e) => {
     e.preventDefault();
-
     try {
       const response = await fetch('http://localhost:3000/inversiones', {
         method: 'POST',
@@ -49,7 +18,12 @@ function Inversiones({ token }) {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ tipo: tipoInversion, monto: parseFloat(monto), fecha, descripcion }),
+        body: JSON.stringify({
+          tipo,
+          cantidad: parseFloat(cantidad),
+          fecha,
+          descripcion,
+        }),
       });
 
       if (!response.ok) {
@@ -57,14 +31,16 @@ function Inversiones({ token }) {
       }
 
       const newInversion = await response.json();
-      setInversiones([...inversiones, newInversion]);
       setSuccess('Inversión agregada exitosamente');
       setError('');
-      setTipoInversion('');
-      setMonto('');
+      setCantidad('');
+      setTipo('');
       setFecha('');
       setDescripcion('');
+      // Actualiza el estado de inversiones si lo necesitas
+      inversiones.push(newInversion);
     } catch (error) {
+      console.error('Error al agregar la inversión:', error);
       setError('Error al agregar la inversión');
       setSuccess('');
     }
@@ -73,17 +49,13 @@ function Inversiones({ token }) {
   return (
     <div className="inversiones-container">
       <h2 className="text-center">Inversiones</h2>
-      {error && <div className="alert alert-danger">{error}</div>}
-      {success && <div className="alert alert-success">{success}</div>}
-      
       {inversiones.length > 0 ? (
         <ul className="list-group mb-4">
           {inversiones.map((inversion) => (
             <li key={inversion.id} className="list-group-item d-flex justify-content-between align-items-center">
               <div>
-                <strong>{inversion.fecha}</strong> - {inversion.tipo} - ${inversion.monto}
+                <strong>{inversion.fecha}</strong> - {inversion.tipo} (${inversion.cantidad})
               </div>
-              <span>{inversion.descripcion}</span>
             </li>
           ))}
         </ul>
@@ -91,25 +63,26 @@ function Inversiones({ token }) {
         <p className="text-center">No hay inversiones disponibles</p>
       )}
 
+      {/* Formulario para agregar nueva inversión */}
       <h3 className="text-center">Agregar nueva inversión</h3>
-      <form onSubmit={handleSubmit} className="col-md-6 mx-auto">
+      <form onSubmit={handleSubmitInversion} className="col-md-6 mx-auto">
         <div className="mb-3">
           <label>Tipo de Inversión:</label>
           <input
             type="text"
             className="form-control"
-            value={tipoInversion}
-            onChange={(e) => setTipoInversion(e.target.value)}
+            value={tipo}
+            onChange={(e) => setTipo(e.target.value)}
             required
           />
         </div>
         <div className="mb-3">
-          <label>Monto:</label>
+          <label>Cantidad:</label>
           <input
             type="number"
             className="form-control"
-            value={monto}
-            onChange={(e) => setMonto(e.target.value)}
+            value={cantidad}
+            onChange={(e) => setCantidad(e.target.value)}
             required
           />
         </div>
@@ -133,6 +106,8 @@ function Inversiones({ token }) {
           />
         </div>
         <button type="submit" className="btn btn-success w-100">Agregar Inversión</button>
+        {error && <div className="alert alert-danger mt-3">{error}</div>}
+        {success && <div className="alert alert-success mt-3">{success}</div>}
       </form>
     </div>
   );

@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -47,6 +48,15 @@ db.connect((err) => {
   }
 });
 
+// Configuración de Nodemailer para envío de correos electrónicos utilizando las variables de entorno
+const transporter = nodemailer.createTransport({
+  service: 'Gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
 // Middleware para verificar token JWT
 function authenticateToken(req, res, next) {
   const token = req.header('Authorization')?.split(' ')[1];
@@ -54,7 +64,7 @@ function authenticateToken(req, res, next) {
     return res.status(401).json({ message: 'Acceso denegado, no hay token' });
   }
   try {
-    const verified = jwt.verify(token, 'clave_secreta_jwt');  // Verificar el token
+    const verified = jwt.verify(token, process.env.JWT_SECRET);  // Usar la clave secreta desde el archivo .env
     req.user = verified;  // Asignar el usuario autenticado
     next();
   } catch (err) {
@@ -62,27 +72,65 @@ function authenticateToken(req, res, next) {
   }
 }
 
-// Ruta para registrar un usuario con foto de perfil
+// Ruta para registrar un usuario con foto de perfil y enviar correo de verificación
 app.post('/usuarios', upload.single('foto_perfil'), async (req, res) => {
   const { nombre, email, password } = req.body;
-  const fotoPerfil = req.file ? `/uploads/${req.file.filename}` : null;  // Obtener la ruta de la imagen subida
+  const fotoPerfil = req.file ? `/uploads/${req.file.filename}` : null;
 
   try {
-    // Encriptar la contraseña
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Guardar el usuario en la base de datos
     const sql = 'INSERT INTO usuarios (nombre, email, password, verificado, foto_perfil) VALUES (?, ?, ?, FALSE, ?)';
     db.query(sql, [nombre, email, hashedPassword, fotoPerfil], (err, result) => {
       if (err) {
         return res.status(500).json({ error: err });
       }
 
-      res.json({ message: 'Usuario registrado', id: result.insertId, fotoPerfil });
+      // Enviar el correo de verificación
+      const token = jwt.sign({ id: result.insertId }, process.env.JWT_SECRET, { expiresIn: '1h' });
+      const verificationLink = `http://localhost:3000/verify/${token}`;
+
+      const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: 'Verificación de cuenta',
+        html: `<p>Hola ${nombre},</p><p>Por favor, verifica tu cuenta haciendo clic en el siguiente enlace:</p><a href="${verificationLink}">Verificar cuenta</a>`,
+      };
+
+      transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          return res.status(500).json({ message: 'Error al enviar el correo de verificación' });
+        }
+        res.json({ message: 'Usuario registrado, revisa tu correo para verificar la cuenta', id: result.insertId, fotoPerfil });
+      });
     });
   } catch (error) {
     res.status(500).json({ message: 'Error al registrar el usuario' });
+  }
+});
+
+// Ruta para verificar la cuenta
+app.get('/verify/:token', (req, res) => {
+  const { token } = req.params;
+
+  try {
+    // Verificar el token con JWT
+    const verified = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = verified.id;
+
+    // Actualizar el estado del usuario a verificado en la base de datos
+    const sql = 'UPDATE usuarios SET verificado = TRUE WHERE id = ?';
+    db.query(sql, [userId], (err, result) => {
+      if (err) {
+        return res.status(500).json({ message: 'Error al verificar el usuario' });
+      }
+
+      // Si la verificación fue exitosa, enviar una respuesta indicando que se verificó
+      res.redirect('http://localhost:3001/confirmacion-verificacion'); // URL de tu frontend
+    });
+  } catch (error) {
+    res.status(400).json({ message: 'Token no válido o expirado' });
   }
 });
 
@@ -163,6 +211,7 @@ app.post('/login', (req, res) => {
   const sql = 'SELECT * FROM usuarios WHERE email = ?';
   db.query(sql, [email], async (err, result) => {
     if (err) {
+      console.error('Error en la consulta MySQL:', err);  // Esto imprime el error en la consola
       return res.status(500).json({ error: err });
     }
 
@@ -181,7 +230,7 @@ app.post('/login', (req, res) => {
       return res.status(400).json({ message: 'Contraseña incorrecta' });
     }
 
-    const token = jwt.sign({ id: user.id }, 'clave_secreta_jwt', { expiresIn: '1h' });
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
     res.json({ message: 'Login exitoso', token });
   });
 });
@@ -212,11 +261,15 @@ app.put('/usuarios/editar-perfil', authenticateToken, upload.single('foto_perfil
 
 // Ruta para agregar una inversión
 app.post('/inversiones', authenticateToken, (req, res) => {
-  const { tipo, cantidad, descripcion, fecha } = req.body;
+  const { tipo, cantidad, fecha, descripcion } = req.body;
   const userId = req.user.id;
 
-  const sql = 'INSERT INTO inversiones (user_id, tipo, cantidad, descripcion, fecha) VALUES (?, ?, ?, ?, ?)';
-  db.query(sql, [userId, tipo, cantidad, descripcion, fecha], (err, result) => {
+  if (!tipo || !cantidad || !fecha) {
+    return res.status(400).json({ message: 'Por favor complete todos los campos' });
+  }
+
+  const sql = 'INSERT INTO inversiones (user_id, tipo, cantidad, fecha, descripcion) VALUES (?, ?, ?, ?, ?)';
+  db.query(sql, [userId, tipo, cantidad, fecha, descripcion], (err, result) => {
     if (err) {
       return res.status(500).json({ message: 'Error al agregar la inversión' });
     }
@@ -232,6 +285,48 @@ app.get('/inversiones', authenticateToken, (req, res) => {
   db.query(sql, [userId], (err, result) => {
     if (err) {
       return res.status(500).json({ message: 'Error al cargar las inversiones' });
+    }
+    res.json(result);
+  });
+});
+
+// Ruta para obtener los gastos del mes
+app.get('/transacciones/gastos-mes', authenticateToken, (req, res) => {
+  const userId = req.user.id;
+  const mesActual = new Date().getMonth() + 1; // Mes actual (1-12)
+  const anioActual = new Date().getFullYear(); // Año actual
+  const sql = `
+    SELECT * FROM transacciones 
+    WHERE user_id = ? 
+      AND tipo = 'gasto' 
+      AND MONTH(fecha) = MONTH(CURRENT_DATE()) 
+      AND YEAR(fecha) = YEAR(CURRENT_DATE())
+    ORDER BY fecha DESC`;
+  
+    db.query(sql, [userId, mesActual, anioActual], (err, result) => {
+      if (err) {
+      return res.status(500).json({ message: 'Error al cargar los gastos del mes' });
+    }
+    res.json(result);
+  });
+});
+
+// Ruta para obtener los ingresos del mes
+app.get('/transacciones/ingresos-mes', authenticateToken, (req, res) => {
+  const userId = req.user.id;
+  const mesActual = new Date().getMonth() + 1; // Mes actual (1-12)
+  const anioActual = new Date().getFullYear(); // Año actual
+  const sql = `
+    SELECT * FROM transacciones 
+    WHERE user_id = ? 
+      AND tipo = 'ingreso' 
+      AND MONTH(fecha) = MONTH(CURRENT_DATE()) 
+      AND YEAR(fecha) = YEAR(CURRENT_DATE())
+    ORDER BY fecha DESC`;
+  
+    db.query(sql, [userId, mesActual, anioActual], (err, result) => {
+      if (err) {
+      return res.status(500).json({ message: 'Error al cargar los ingresos del mes' });
     }
     res.json(result);
   });

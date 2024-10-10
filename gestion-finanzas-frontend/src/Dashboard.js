@@ -1,12 +1,14 @@
+// src/Dashboard.js
 import React, { useState, useEffect, useCallback } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Link, Route, Routes } from 'react-router-dom';
-import { FaBars, /*FaSignOutAlt,*/ FaUser, FaClipboardList, FaChartLine} from 'react-icons/fa'; // Añadido FaChartLine para inversiones
+import { FaBars, FaUser, FaClipboardList, FaChartLine, FaHome} from 'react-icons/fa';
 import './Dashboard.css';
-import Profile from './Profile'; // Nueva página de perfil
-import EditProfile from './EditProfile'; // Nueva página de edición de perfil
+import Profile from './Profile';
+import EditProfile from './EditProfile';
+import Inversiones from './Inversiones';
 
-function Dashboard({ token }) {
+function Dashboard({ token, logout }) {
   const [transacciones, setTransacciones] = useState([]);
   const [inversiones, setInversiones] = useState([]);
   const [usuario, setUsuario] = useState(null);
@@ -16,8 +18,10 @@ function Dashboard({ token }) {
   const [tipo, setTipo] = useState('ingreso');
   const [descripcion, setDescripcion] = useState('');
   const [fecha, setFecha] = useState('');
-  //const [error, setError] = useState('');
-  //const [success, setSuccess] = useState('');
+  const [gastosMes, setGastosMes] = useState([]);
+  const [ingresosMes, setIngresosMes] = useState([]);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   // Fetch de transacciones
   const fetchTransacciones = useCallback(async () => {
@@ -86,7 +90,7 @@ function Dashboard({ token }) {
     if (token) {
       fetchTransacciones();
       fetchUsuario();
-      fetchInversiones(); // Fetch de las inversiones
+      fetchInversiones();
     }
   }, [token, fetchTransacciones, fetchUsuario, fetchInversiones]);
 
@@ -123,13 +127,59 @@ function Dashboard({ token }) {
     }
   };
 
+    // Función para obtener los gastos del mes
+  const fetchGastosMes = useCallback(async () => {
+    try {
+      const response = await fetch('http://localhost:3000/transacciones/gastos-mes', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Error al obtener los gastos del mes');
+      }
+      const data = await response.json();
+      setGastosMes(data);
+    } catch (error) {
+      setError('Error al cargar los gastos del mes');
+    }
+  }, [token]);
+
+  // Función para obtener los ingresos del mes
+  const fetchIngresosMes = useCallback(async () => {
+    try {
+      const response = await fetch('http://localhost:3000/transacciones/ingresos-mes', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Error al obtener los ingresos del mes');
+      }
+      const data = await response.json();
+      setIngresosMes(data);
+    } catch (error) {
+      setError('Error al cargar los ingresos del mes');
+    }
+  }, [token]);
+
+  // Usar useEffect para cargar las transacciones del mes
+  useEffect(() => {
+    if (token) {
+      fetchGastosMes();
+      fetchIngresosMes();
+    }
+  }, [token, fetchGastosMes, fetchIngresosMes]);
+
   return (
     <div className="dashboard-container">
       {/* Barra lateral del menú */}
       <div id="sidebar" className={`sidebar ${isMenuOpen ? 'open' : ''}`}>
-        {/* Botón hamburguesa en el menú */}
+         {/* Botón hamburguesa siempre visible y fijo */}
         <button
-          className="hamburger-btn nav-link"
+          className="hamburger-btn"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
           aria-expanded={isMenuOpen}
           aria-controls="sidebar"
@@ -139,6 +189,9 @@ function Dashboard({ token }) {
 
         {/* Enlaces de navegación en la barra lateral */}
         <nav className="nav flex-column mt-3">
+          <Link to="/" className="nav-link">
+            <FaHome /> {isMenuOpen && "Inicio"}
+          </Link>
           <Link to="/perfil" className="nav-link">
             <FaUser /> {isMenuOpen && "Perfil"}
           </Link>
@@ -150,39 +203,72 @@ function Dashboard({ token }) {
           </Link>
         </nav>
 
-        {/* Mostrar información del usuario en la parte inferior solo si está expandido */}
-        {isMenuOpen && usuario && (
-          <div className="sidebar-user-info">
-            <img
-              src={`http://localhost:3000${usuario.foto_perfil}`}
-              alt="Foto de perfil"
-              className="profile-image mb-2"
-            />
-            <p>{usuario.nombre}</p>
-          </div>
-        )}
-      </div>
+        {/* Imagen de perfil y nombre siempre visibles al final */}
+        <div className="sidebar-user-info">
+                <img
+                  src={`http://localhost:3000${usuario?.foto_perfil}`}
+                  alt="Foto de perfil"
+                  className="profile-image"
+                />
+                {isMenuOpen && <p>{usuario?.nombre}</p>}
+              </div>
+            </div>
 
-      {/* Sección de contenido que cambia según la ruta */}
+      {/* Sección de contenido principal */}
       <div className={`content-section ${isMenuOpen ? 'overlay' : ''}`}>
         <Routes>
-          {/* Página de Perfil */}
+          {/* Página principal que muestra ingresos y gastos del mes */}
           <Route
-            path="/perfil"
-            element={<Profile usuario={usuario} />}
-          />
+            path="/"
+            element={
+              <div>
+                <h2 className="text-center">Resumen del mes</h2>
 
-          {/* Página de Edición de Perfil */}
-          <Route
-            path="/editar-perfil"
-            element={<EditProfile usuario={usuario} />}
-          />
+                {/* Ingresos del mes */}
+                <h3 className="text-center">Ingresos del mes</h3>
+                {ingresosMes.length > 0 ? (
+                  <ul className="list-group mb-4">
+                    {ingresosMes.map((ingreso) => (
+                      <li key={ingreso.id} className="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                          <strong>{ingreso.fecha}</strong> - {ingreso.categoria} (${ingreso.cantidad})
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-center">No hay ingresos disponibles este mes</p>
+                )}
 
-          {/* Página de Transacciones */}
-          <Route
+                {/* Gastos del mes */}
+                <h3 className="text-center">Gastos del mes</h3>
+                {gastosMes.length > 0 ? (
+                  <ul className="list-group mb-4">
+                    {gastosMes.map((gasto) => (
+                      <li key={gasto.id} className="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                          <strong>{gasto.fecha}</strong> - {gasto.categoria} (${gasto.cantidad})
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-center">No hay gastos disponibles este mes</p>
+                )}
+              </div>
+            }
+          />
+            {/* Página de Perfil */}
+            <Route path="/perfil" element={<Profile usuario={usuario} logout={logout} />} />
+
+            {/* Página de Edición de Perfil */}
+            <Route path="/editar-perfil" element={<EditProfile usuario={usuario} />} />
+
+            {/* Página de Transacciones */}
+            <Route
             path="/transacciones"
             element={
-              <>
+              <div>
                 <h2 className="text-center">Transacciones</h2>
                 {transacciones.length > 0 ? (
                   <ul className="list-group mb-4">
@@ -200,6 +286,8 @@ function Dashboard({ token }) {
                 ) : (
                   <p className="text-center">No hay transacciones disponibles</p>
                 )}
+
+                {/* Formulario para agregar nueva transacción */}
                 <h3 className="text-center">Agregar nueva transacción</h3>
                 <form onSubmit={handleSubmit} className="col-md-6 mx-auto">
                   <div className="mb-3">
@@ -250,31 +338,14 @@ function Dashboard({ token }) {
                   </div>
                   <button type="submit" className="btn btn-success w-100">Agregar</button>
                 </form>
-              </>
+              </div>
             }
           />
 
           {/* Página de Inversiones */}
           <Route
             path="/inversiones"
-            element={
-              <>
-                <h2 className="text-center">Inversiones</h2>
-                {inversiones.length > 0 ? (
-                  <ul className="list-group mb-4">
-                    {inversiones.map((inversion) => (
-                      <li key={inversion.id} className="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                          <strong>{inversion.fecha}</strong> - {inversion.tipo} (${inversion.cantidad})
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-center">No hay inversiones disponibles</p>
-                )}
-              </>
-            }
+            element={<Inversiones inversiones={inversiones} token={token}/>}
           />
         </Routes>
       </div>

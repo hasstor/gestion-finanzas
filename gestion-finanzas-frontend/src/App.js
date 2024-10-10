@@ -7,17 +7,17 @@ import PrivateRoute from './PrivateRoute';  // Importar el componente de rutas p
 import EditarPerfil from './EditarPerfil';  // Importamos el nuevo componente
 
 function App() {
-  const [token, setToken] = useState(localStorage.getItem('token'));
+  const [token, setToken] = useState(sessionStorage.getItem('token'));
 
   // Función para guardar el token en localStorage
   const saveToken = (token) => {
-    localStorage.setItem('token', token);
+    sessionStorage.setItem('token', token);
     setToken(token);
   };
 
   // Función para hacer logout y eliminar el token
   const logout = () => {
-    localStorage.removeItem('token');
+    sessionStorage.removeItem('token');
     setToken(null);
   };
 

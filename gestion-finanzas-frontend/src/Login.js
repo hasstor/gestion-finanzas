@@ -18,11 +18,12 @@ function Login({ setToken }) {
     });
 
     const data = await response.json();
-    
+    console.log(data);
+
     if (response.ok) {
       // Guardar el token en localStorage y actualizar el estado
+      sessionStorage.setItem('token', data.token); // Guardar el token en el almacenamiento de sesión
       setToken(data.token);
-      localStorage.setItem('token', data.token);
       setError(''); // Limpiar errores si el inicio de sesión es exitoso
     } else {
       setError(data.message); // Mostrar el mensaje de error si las credenciales son incorrectas
