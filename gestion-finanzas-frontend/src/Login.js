@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Link } from 'react-router-dom';
+import './Login.css'; // Importa los estilos si los tienes en un archivo separado
 
 function Login({ setToken }) {
   const [email, setEmail] = useState('');
@@ -31,8 +32,8 @@ function Login({ setToken }) {
   };
 
   return (
-    <div className="d-flex justify-content-center align-items-center vh-100">
-      <div className="card p-4 shadow-sm" style={{ maxWidth: '400px', width: '100%' }}>
+    <div className="auth-page-container">
+      <div className="auth-form">
         <h2 className="mb-4 text-center">Iniciar sesión</h2>
         {error && <p className="text-danger">{error}</p>} {/* Mostrar error si lo hay */}
         <form onSubmit={handleSubmit}>

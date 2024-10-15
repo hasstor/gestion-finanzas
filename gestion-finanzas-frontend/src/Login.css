@@ -1,0 +1,39 @@
+/* Estilos generales */
+.auth-page-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-image: url('./fondo.jpg'); /* Aquí va la URL de la imagen de fondo */
+    background-size: cover;
+    background-position: center;
+  }
+  
+  /* Formulario con transparencia */
+  .auth-form {
+    background-color: rgba(255, 255, 255, 0.9); /* Fondo blanco semi-transparente */
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    max-width: 350px;
+    width: 100%;
+  }
+  
+  .auth-form h2 {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  .auth-form .form-control {
+    margin-bottom: 15px;
+  }
+  
+  .auth-form button {
+    width: 100%;
+  }
+  
+  .auth-form p {
+    text-align: center;
+    margin-top: 15px;
+  }
+  

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { useNavigate, Link } from 'react-router-dom';
+import './Login.css'; // Importa los estilos si los tienes en un archivo separado
 
 function Register() {
   const [nombre, setNombre] = useState('');
@@ -40,8 +41,8 @@ function Register() {
   };
 
   return (
-    <div className="d-flex justify-content-center align-items-center vh-100">
-      <div className="card p-4 shadow-sm" style={{ maxWidth: '400px', width: '100%' }}>
+    <div className="auth-page-container">
+      <div className="auth-form">
         <h2 className="mb-4 text-center">Registro</h2>
         {error && <p className="text-danger">{error}</p>}
         {message && <p className="text-success">{message}</p>}
